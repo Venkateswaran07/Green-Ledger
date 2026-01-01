@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Block } from '../types';
-import { Link, AlertTriangle, ShieldCheck, Box, Lightbulb, CheckCircle2, Trash2, ShieldAlert } from 'lucide-react';
+import { Link, AlertTriangle, ShieldCheck, Box, Lightbulb, CheckCircle2, Trash2, ShieldAlert, X } from 'lucide-react';
 
 interface ChainVisualizerProps {
   chain: Block[];
@@ -17,12 +17,12 @@ const ChainVisualizer: React.FC<ChainVisualizerProps> = ({ chain, validity, isAd
     <div className="space-y-8 p-4 max-w-4xl mx-auto">
         <div className="flex justify-between items-end mb-6">
             <div>
-                <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Immutable Ledger</h2>
-                <p className="text-gray-500 font-medium">Verified supply chain events on EcoChain protocol.</p>
+                <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Verified Supply Ledger</h2>
+                <p className="text-gray-500 font-medium">Cryptographically secured event stream for EcoChain.</p>
             </div>
             {isAdmin && (
-                <div className="bg-red-50 text-red-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-red-100 flex items-center gap-1.5 animate-pulse">
-                    <ShieldAlert size={12} /> Management Mode
+                <div className="bg-red-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-red-200 animate-in slide-in-from-right-2">
+                    <ShieldAlert size={14} /> MASTER ADMIN OVERRIDE
                 </div>
             )}
         </div>
@@ -43,87 +43,87 @@ const ChainVisualizer: React.FC<ChainVisualizerProps> = ({ chain, validity, isAd
                 </div>
 
                 <div className={`flex-grow p-6 rounded-3xl border shadow-xl transition-all relative
-                   ${isValid ? 'bg-white border-gray-100 hover:border-emerald-200' : 'bg-red-50 border-red-300'}`}>
+                   ${isValid ? 'bg-white border-gray-100 hover:border-emerald-200 shadow-emerald-50/50' : 'bg-red-50 border-red-300'}`}>
                   
-                  {/* Admin Deletion Action */}
+                  {/* ADMIN DELETE BUTTON */}
                   {isAdmin && !isGenesis && (
-                    <div className="absolute top-6 right-6 flex gap-2">
+                    <div className="absolute top-4 right-4 z-20">
                         {confirmDelete === block.index ? (
-                            <div className="flex gap-2 animate-in zoom-in">
-                                <button 
-                                    onClick={() => { onDeleteBlock?.(block.index); setConfirmDelete(null); }}
-                                    className="bg-red-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg hover:bg-red-700 shadow-lg shadow-red-200"
-                                >
-                                    Confirm Delete
-                                </button>
-                                <button 
-                                    onClick={() => setConfirmDelete(null)}
-                                    className="bg-gray-200 text-gray-700 text-[10px] font-bold px-3 py-1.5 rounded-lg hover:bg-gray-300"
-                                >
-                                    Cancel
-                                </button>
+                            <div className="flex flex-col gap-2 bg-white p-3 rounded-2xl shadow-2xl border-2 border-red-500 animate-in zoom-in duration-200 w-48">
+                                <p className="text-[10px] font-black text-red-600 uppercase text-center mb-1">Destroy this block?</p>
+                                <div className="flex gap-2">
+                                  <button 
+                                      onClick={() => { onDeleteBlock?.(block.index); setConfirmDelete(null); }}
+                                      className="flex-grow bg-red-600 text-white text-[10px] font-black uppercase px-2 py-2 rounded-lg hover:bg-red-700 transition-all"
+                                  >
+                                      Delete
+                                  </button>
+                                  <button 
+                                      onClick={() => setConfirmDelete(null)}
+                                      className="bg-gray-100 text-gray-700 p-2 rounded-lg hover:bg-gray-200"
+                                  >
+                                      <X size={14} />
+                                  </button>
+                                </div>
                             </div>
                         ) : (
                             <button 
                                 onClick={() => setConfirmDelete(block.index)}
-                                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                                title="Delete Block"
+                                className="group/del flex items-center gap-2 bg-red-50 text-red-600 text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl hover:bg-red-600 hover:text-white transition-all border border-red-200 shadow-sm"
                             >
-                                <Trash2 size={18} />
+                                <Trash2 size={14} className="group-hover/del:scale-110 transition-transform" /> 
+                                Remove from Chain
                             </button>
                         )}
                     </div>
                   )}
 
-                  <div className="flex justify-between items-start mb-6 pr-12">
+                  <div className="flex justify-between items-start mb-6 pr-24">
                     <div>
                       <h3 className="font-extrabold text-xl text-gray-900 flex items-center gap-3">
                         {block.actor}
-                        {!isValid && <span className="bg-red-100 text-red-700 text-[10px] font-black px-2.5 py-1 rounded-full flex items-center gap-1 uppercase tracking-wider shadow-sm"><AlertTriangle size={12}/> Tampered</span>}
+                        {!isValid && <span className="bg-red-100 text-red-700 text-[10px] font-black px-2.5 py-1 rounded-full flex items-center gap-1 uppercase tracking-wider shadow-sm"><AlertTriangle size={12}/> SHA-256 Error</span>}
                       </h3>
                       <p className="text-xs text-emerald-600 font-bold uppercase tracking-widest mt-0.5">
-                        Block Sequence <span className="text-gray-400">#00{block.index}</span>
+                        BLOCK #00{block.index} <span className="text-gray-300 ml-2">Verified at {new Date(block.timestamp).toLocaleTimeString()}</span>
                       </p>
                     </div>
-                    {!isGenesis && (
-                        <div className="text-right">
-                            <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border shadow-sm
-                                ${block.trustAnalysis?.isVerified ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-yellow-50 text-yellow-700 border-yellow-100'}`}>
-                                <ShieldCheck size={14} className={block.trustAnalysis?.isVerified ? 'text-emerald-500' : 'text-yellow-500'} /> 
-                                Trust: {block.trustAnalysis?.trustScore || '85'}%
-                            </span>
-                        </div>
-                    )}
+                    <div className="text-right">
+                        <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border shadow-sm
+                            ${block.trustAnalysis?.isVerified !== false ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-yellow-50 text-yellow-700 border-yellow-100'}`}>
+                            <ShieldCheck size={14} className={block.trustAnalysis?.isVerified !== false ? 'text-emerald-500' : 'text-yellow-500'} /> 
+                            AI Trust Score: {block.trustAnalysis?.trustScore || '85'}%
+                        </span>
+                    </div>
                   </div>
 
-                  <div className="bg-gray-50/80 p-4 rounded-2xl mb-6 font-mono text-[10px] border border-gray-100 group-hover:bg-white transition-colors overflow-hidden">
+                  <div className="bg-gray-50/80 p-4 rounded-2xl mb-6 font-mono text-[9px] border border-gray-100 group-hover:bg-white transition-colors overflow-hidden">
                     <div className="flex gap-4 mb-2">
-                      <span className="font-bold text-gray-400 w-12 uppercase">Prev:</span> 
+                      <span className="font-bold text-gray-400 w-12 uppercase shrink-0">Prev:</span> 
                       <span className="text-gray-400 truncate">{block.previousHash}</span>
                     </div>
                     <div className={`flex gap-4 ${isValid ? "text-emerald-700" : "text-red-600 font-bold"}`}>
-                      <span className="font-bold text-gray-400 w-12 uppercase">Hash:</span> 
+                      <span className="font-bold text-gray-400 w-12 uppercase shrink-0">Hash:</span> 
                       <span className="truncate">{block.hash}</span>
                     </div>
                   </div>
 
-                  {!isGenesis && (
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mb-6">
-                        {Object.entries(block.data).map(([key, val]) => {
-                            if (key === 'actorType' || key === 'notes' || typeof val === 'object') return null;
-                            return (
-                                <div key={key} className="p-3 bg-gray-50 rounded-xl border border-transparent hover:border-emerald-100 transition-all">
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter mb-1">{key.replace(/([A-Z])/g, ' $1')}</p>
-                                    <p className="font-bold text-gray-800">{String(val)}</p>
-                                </div>
-                            )
-                        })}
-                        <div className="p-3 bg-emerald-50/50 rounded-xl border border-emerald-100">
-                             <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-tighter mb-1">Carbon Impact</p>
-                             <p className="font-black text-emerald-800">{block.emissions} kg CO₂e</p>
-                        </div>
-                      </div>
-                  )}
+                  {/* DATA GRID - REMOVED !isGenesis CHECK */}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mb-6">
+                    {Object.entries(block.data).map(([key, val]) => {
+                        if (key === 'actorType' || key === 'notes' || key === 'timestamp' || key === 'category' || typeof val === 'object') return null;
+                        return (
+                            <div key={key} className="p-3 bg-gray-50 rounded-xl border border-transparent hover:border-emerald-100 transition-all">
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter mb-1">{key.replace(/([A-Z])/g, ' $1')}</p>
+                                <p className="font-bold text-gray-800">{String(val)}</p>
+                            </div>
+                        )
+                    })}
+                    <div className="p-3 bg-emerald-50/50 rounded-xl border border-emerald-100">
+                         <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-tighter mb-1">Carbon Weight</p>
+                         <p className="font-black text-emerald-800">{block.emissions} kg CO₂e</p>
+                    </div>
+                  </div>
 
                   {block.data.notes && (
                       <div className="mb-6 p-4 bg-emerald-50/30 rounded-2xl border border-emerald-50 italic text-gray-600 text-sm font-medium">
@@ -131,13 +131,14 @@ const ChainVisualizer: React.FC<ChainVisualizerProps> = ({ chain, validity, isAd
                       </div>
                   )}
 
-                  {block.trustAnalysis && !isGenesis && (
+                  {/* TRUST ANALYSIS - REMOVED !isGenesis CHECK */}
+                  {block.trustAnalysis && (
                     <div className="border-t border-dashed pt-6">
                        <div className="flex items-center gap-2 mb-4">
                            <div className="p-1.5 bg-emerald-100 rounded-lg text-emerald-600">
                                <ShieldCheck size={18} />
                            </div>
-                           <p className="text-xs font-black text-gray-500 uppercase tracking-widest">GreenTrust AI Certification</p>
+                           <p className="text-xs font-black text-gray-500 uppercase tracking-widest">GreenTrust AI Audit Summary</p>
                        </div>
                        
                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -145,16 +146,16 @@ const ChainVisualizer: React.FC<ChainVisualizerProps> = ({ chain, validity, isAd
                                <div className="bg-red-50 p-4 rounded-2xl border border-red-100">
                                    <div className="flex items-center gap-2 text-red-800 font-bold text-xs mb-2 uppercase tracking-wide">
                                        <AlertTriangle size={14} />
-                                       <span>Detected Anomalies</span>
+                                       <span>Detected Issues</span>
                                    </div>
                                    <ul className="text-xs text-red-700 space-y-2 font-medium">
                                        {block.trustAnalysis.anomalies.map((a, i) => <li key={i} className="flex gap-2"><span>•</span> {a}</li>)}
                                    </ul>
                                </div>
                            ) : (
-                               <div className="flex items-center gap-3 text-emerald-700 bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
+                               <div className="flex items-center gap-3 text-emerald-700 bg-emerald-50 p-4 rounded-2xl border border-emerald-100 shadow-inner">
                                    <div className="bg-white p-2 rounded-full shadow-sm text-emerald-500"><CheckCircle2 size={20} /></div>
-                                   <span className="text-xs font-bold leading-snug">Industrial parameters verified against ISO-14064 standards.</span>
+                                   <span className="text-xs font-bold leading-snug">All industrial parameters align with expected supply chain behavior.</span>
                                </div>
                            )}
 
@@ -162,7 +163,7 @@ const ChainVisualizer: React.FC<ChainVisualizerProps> = ({ chain, validity, isAd
                                 <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100">
                                    <div className="flex items-center gap-2 text-blue-800 font-bold text-xs mb-2 uppercase tracking-wide">
                                        <Lightbulb size={14} />
-                                       <span>Optimization Path</span>
+                                       <span>AI Optimization Path</span>
                                    </div>
                                    <ul className="text-xs text-blue-700 space-y-2 font-medium">
                                        {block.trustAnalysis.suggestions.map((s, i) => <li key={i} className="flex gap-2"><span>•</span> {s}</li>)}

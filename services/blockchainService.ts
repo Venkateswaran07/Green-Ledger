@@ -16,12 +16,14 @@ async function computeHash(
   return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-// Fix: Changed actor parameter to string to support dynamic roles from categories and resolve App.tsx type error
+// Fix: Added category and batchId parameters to satisfy Block interface requirements
 export const createBlock = async (
   chain: Block[],
   actor: string,
   data: StageData,
   emissions: number,
+  category: string,
+  batchId: string,
   trustAnalysis?: any
 ): Promise<Block> => {
   const previousBlock = chain[chain.length - 1];
@@ -32,10 +34,13 @@ export const createBlock = async (
 
   const hash = await computeHash(index, previousHash, timestamp, data, emissions);
 
+  // Fix: Include category and batchId in the returned block object
   return {
     index,
     timestamp,
     actor,
+    category,
+    batchId,
     data,
     emissions,
     cumulativeEmissions,

@@ -20,6 +20,7 @@ export interface Category {
 export interface BaseData {
   actorType: string;
   notes?: string;
+  batchId: string;
 }
 
 export interface StageData extends BaseData {
@@ -37,7 +38,8 @@ export interface Block {
   index: number;
   timestamp: number;
   actor: string;
-  category?: string;
+  category: string;
+  batchId: string;
   data: StageData;
   emissions: number;
   cumulativeEmissions: number;
@@ -47,7 +49,5 @@ export interface Block {
   isTampered?: boolean;
 }
 
-export interface BlockchainState {
-  chain: Block[];
-  isValid: boolean;
-}
+// Multi-chain state: CategoryID -> BatchID -> Blocks[]
+export type MultiChainState = Record<string, Record<string, Block[]>>;

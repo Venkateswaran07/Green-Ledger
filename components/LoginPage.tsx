@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Category } from '../types';
 import { 
   Tractor, Factory, Truck, Coffee, Store, ShieldCheck, ArrowLeft, 
@@ -45,6 +45,13 @@ export const CATEGORIES: Category[] = [
   }
 ];
 
+interface RegisteredUser {
+  email: string;
+  name: string;
+  categoryId: string;
+  role: string;
+}
+
 interface LoginPageProps {
   onLogin: (category: Category, role: string, isAdmin?: boolean) => void;
 }
@@ -61,6 +68,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const getRegistry = (): RegisteredUser[] => {
+    const saved = localStorage.getItem('ecochain_users_v2');
+    return saved ? JSON.parse(saved) : [];
+  };
+
+  const saveRegistry = (users: RegisteredUser[]) => {
+    localStorage.setItem('ecochain_users_v2', JSON.stringify(users));
+  };
 
   const getIcon = (iconName: string, size = 24) => {
     const icons: Record<string, any> = { Flame, Beaker, Biohazard, FlaskConical, Boxes, ShieldCheck, Settings };
@@ -80,35 +96,79 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const handleAuthSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
     
-    if (isAdminPortal) {
-        if (email === 'admin@ecochain.com' && password === 'admin123') {
-            setLoading(true);
-            setTimeout(() => {
+    setTimeout(() => {
+        if (isAdminPortal) {
+            if (email.toLowerCase() === 'admin@ecochain.com' && password === 'admin123') {
                 setLoading(false);
                 onLogin(CATEGORIES[0], 'System Administrator', true);
-            }, 1000);
-        } else {
-            setError('Invalid administrative credentials.');
+            } else {
+                setLoading(false);
+                setError('Access Denied: Invalid admin credentials.');
+            }
+            return;
         }
-        return;
-    }
 
-    if (!email || !password) { setError('Missing fields'); return; }
-    if (isSignUp && password !== confirmPassword) { setError('Passwords match failed'); return; }
-    
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      if (selectedCategory && selectedRole) onLogin(selectedCategory, selectedRole, false);
-    }, 1000);
+        if (!email || !password) { setError('All fields required'); setLoading(false); return; }
+        
+        const registry = getRegistry();
+        const normalizedEmail = email.toLowerCase().trim();
+
+        if (isSignUp) {
+            if (password !== confirmPassword) { setError('Passwords do not match'); setLoading(false); return; }
+            if (!name) { setError('Name is required'); setLoading(false); return; }
+
+            const existing = registry.find(u => u.email === normalizedEmail);
+            if (existing) {
+                const catName = CATEGORIES.find(c => c.id === existing.categoryId)?.name || 'another category';
+                setError(`Email locked to ${catName} / ${existing.role}. Please use a distinct email.`);
+                setLoading(false);
+                return;
+            }
+
+            const newUser: RegisteredUser = {
+                email: normalizedEmail,
+                name,
+                categoryId: selectedCategory!.id,
+                role: selectedRole!
+            };
+            
+            saveRegistry([...registry, newUser]);
+            setLoading(false);
+            onLogin(selectedCategory!, selectedRole!, false);
+        } else {
+            const user = registry.find(u => u.email === normalizedEmail);
+            
+            if (!user) {
+                setError('Account not found. Ensure you are in the correct category/role and have signed up.');
+                setLoading(false);
+                return;
+            }
+            
+            if (user.categoryId !== selectedCategory!.id) {
+                const intendedCat = CATEGORIES.find(c => c.id === user.categoryId)?.name;
+                setError(`This account belongs to ${intendedCat}. Access denied for ${selectedCategory!.name}.`);
+                setLoading(false);
+                return;
+            }
+
+            if (user.role !== selectedRole) {
+                setError(`This email is registered as ${user.role}. You cannot login as ${selectedRole} with this account.`);
+                setLoading(false);
+                return;
+            }
+
+            setLoading(false);
+            onLogin(selectedCategory!, selectedRole!, false);
+        }
+    }, 800);
   };
 
-  // Admin Portal View
   if (isAdminPortal) {
       return (
         <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-red-500">
+          <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-red-500 animate-in fade-in zoom-in duration-300">
             <div className="bg-slate-800 p-8 text-center relative">
               <button onClick={() => { setIsAdminPortal(false); resetAuthForm(); }} className="absolute left-6 top-6 text-white/70 hover:text-white transition-colors">
                 <ArrowLeft size={24} />
@@ -116,25 +176,25 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               <div className="mx-auto bg-red-500 w-16 h-16 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-red-500/30">
                 <Settings size={32} className="text-white" />
               </div>
-              <h2 className="text-2xl font-black text-white mb-1 uppercase tracking-tighter">Admin Portal</h2>
-              <p className="text-red-400 text-xs font-black uppercase tracking-widest">Authorized Access Only</p>
+              <h2 className="text-2xl font-black text-white mb-1 uppercase tracking-tighter">Admin Control</h2>
+              <p className="text-red-400 text-[10px] font-black uppercase tracking-widest">Master Protocol Access</p>
             </div>
             <div className="p-8">
               <form onSubmit={handleAuthSubmit} className="space-y-4">
                 <div className="relative group">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                  <input type="email" placeholder="Admin Email" className="w-full pl-10 p-3 bg-gray-50 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-red-500 text-gray-900 font-bold" value={email} onChange={e => setEmail(e.target.value)} />
+                  <input type="email" placeholder="Admin Email" className="w-full pl-10 p-3 bg-white rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-red-500 text-slate-950 font-bold placeholder:text-gray-400" value={email} onChange={e => setEmail(e.target.value)} />
                 </div>
                 <div className="relative group">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                  <input type="password" placeholder="Admin Password" className="w-full pl-10 p-3 bg-gray-50 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-red-500 text-gray-900" value={password} onChange={e => setPassword(e.target.value)} />
+                  <input type="password" placeholder="Admin Password" className="w-full pl-10 p-3 bg-white rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-red-500 text-slate-950 font-bold placeholder:text-gray-400" value={password} onChange={e => setPassword(e.target.value)} />
                 </div>
-                {error && <p className="text-red-600 text-[10px] font-black uppercase text-center">{error}</p>}
+                {error && <p className="text-red-600 text-[10px] font-black uppercase text-center bg-red-50 p-2 rounded border border-red-100">{error}</p>}
                 <div className="bg-amber-50 p-3 rounded-lg border border-amber-100 text-[10px] text-amber-700 font-bold mb-4">
-                  NOTE: Use admin@ecochain.com / admin123
+                  DEVELOPER NOTE: admin@ecochain.com / admin123
                 </div>
-                <button type="submit" disabled={loading} className="w-full bg-slate-900 text-white font-black py-4 rounded-xl shadow-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-2 uppercase tracking-widest">
-                  {loading ? 'Authenticating...' : 'Access Console'}
+                <button type="submit" disabled={loading} className="w-full bg-slate-900 text-white font-black py-4 rounded-xl shadow-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-2 uppercase tracking-widest active:scale-[0.98]">
+                  {loading ? 'Authenticating...' : 'Enter System Console'}
                 </button>
               </form>
             </div>
@@ -143,16 +203,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       );
   }
 
-  // View 1: Category Selection
   if (!selectedCategory) {
     return (
       <div className="min-h-screen bg-emerald-50 flex items-center justify-center p-6 relative">
         <div className="max-w-5xl w-full">
           <div className="text-center mb-12">
-            {/* Added missing Leaf icon import from lucide-react */}
             <div className="inline-block bg-emerald-600 text-white p-3 rounded-2xl mb-6 shadow-xl shadow-emerald-200"><Leaf size={40} /></div>
             <h1 className="text-5xl font-black text-emerald-900 mb-4 tracking-tighter">EcoChain Protocol</h1>
-            <p className="text-emerald-700/70 text-lg font-medium">Select a manufacturing domain to begin transparent tracking</p>
+            <p className="text-emerald-700/70 text-lg font-medium">Verified Industry Sustainability Ledger</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {CATEGORIES.map((cat) => (
@@ -171,7 +229,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                     <h3 className="text-2xl font-black text-gray-900 mb-2 leading-tight">{cat.name}</h3>
                     <p className="text-gray-500 text-sm mb-6 font-medium leading-relaxed">{cat.description}</p>
                     <div className="flex items-center text-emerald-600 font-black text-xs uppercase tracking-widest">
-                    Role Directory <ChevronRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform" />
+                    Enter Ecosystem <ChevronRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform" />
                     </div>
                 </div>
               </button>
@@ -180,9 +238,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           <div className="mt-12 text-center">
             <button 
                 onClick={() => { setIsAdminPortal(true); resetAuthForm(); }}
-                className="inline-flex items-center gap-2 text-gray-400 hover:text-red-500 font-black text-xs uppercase tracking-widest transition-colors"
+                className="inline-flex items-center gap-2 text-gray-400 hover:text-red-500 font-black text-[10px] uppercase tracking-[0.2em] transition-colors"
             >
-                <ShieldAlert size={16} /> Administrative Login
+                <ShieldAlert size={14} /> Administrative Gateway
             </button>
           </div>
         </div>
@@ -190,17 +248,16 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     );
   }
 
-  // View 2: Role Selection
   if (!selectedRole) {
     return (
       <div className="min-h-screen bg-emerald-50 flex items-center justify-center p-6">
         <div className="max-w-4xl w-full">
           <button onClick={() => setSelectedCategory(null)} className="flex items-center gap-2 text-emerald-700 mb-10 hover:underline font-black uppercase text-xs tracking-widest transition-all">
-            <ArrowLeft size={18} /> Global Hub
+            <ArrowLeft size={18} /> Back to Hub
           </button>
           <div className="mb-10">
             <h2 className="text-4xl font-black text-gray-900 mb-2 tracking-tight">{selectedCategory.name}</h2>
-            <p className="text-gray-500 font-bold">Assign functional node identity</p>
+            <p className="text-gray-500 font-bold italic">Assign your technical role within this ecosystem.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {selectedCategory.roles.map((role) => (
@@ -219,10 +276,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     );
   }
 
-  // View 3: Auth Form
   return (
     <div className="min-h-screen bg-emerald-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-emerald-100">
+      <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-emerald-100 animate-in fade-in slide-in-from-bottom-5 duration-400">
         <div className="bg-emerald-600 p-10 text-center relative overflow-hidden">
           <div className="absolute top-0 right-0 p-12 opacity-10 text-white rotate-12">
             {getIcon(selectedCategory.icon, 140)}
@@ -241,31 +297,34 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             {isSignUp && (
               <div className="relative group">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
-                <input type="text" placeholder="Full Name" className="w-full pl-12 p-4 bg-gray-50 rounded-2xl border border-gray-100 outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-gray-900 font-medium transition-all" value={name} onChange={e => setName(e.target.value)} />
+                <input type="text" placeholder="Full Professional Name" className="w-full pl-12 p-4 bg-white rounded-2xl border border-gray-100 outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-slate-950 font-bold placeholder:text-gray-400 transition-all" value={name} onChange={e => setName(e.target.value)} required />
               </div>
             )}
             <div className="relative group">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
-              <input type="email" placeholder="Email Address" className="w-full pl-12 p-4 bg-gray-50 rounded-2xl border border-gray-100 outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-gray-900 font-medium transition-all" value={email} onChange={e => setEmail(e.target.value)} />
+              <input type="email" placeholder="Unique Email Identity" className="w-full pl-12 p-4 bg-white rounded-2xl border border-gray-100 outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-slate-950 font-bold placeholder:text-gray-400 transition-all" value={email} onChange={e => setEmail(e.target.value)} required />
             </div>
             <div className="relative group">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
-              <input type="password" placeholder="Password" className="w-full pl-12 p-4 bg-gray-50 rounded-2xl border border-gray-100 outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-gray-900 transition-all" value={password} onChange={e => setPassword(e.target.value)} />
+              <input type="password" placeholder="System Password" className="w-full pl-12 p-4 bg-white rounded-2xl border border-gray-100 outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-slate-950 font-bold placeholder:text-gray-400 transition-all" value={password} onChange={e => setPassword(e.target.value)} required />
             </div>
             {isSignUp && (
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
-                <input type="password" placeholder="Confirm Password" className="w-full pl-12 p-4 bg-gray-50 rounded-2xl border border-gray-100 outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-gray-900 transition-all" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+                <input type="password" placeholder="Confirm Password" className="w-full pl-12 p-4 bg-white rounded-2xl border border-gray-100 outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-slate-950 font-bold placeholder:text-gray-400 transition-all" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
               </div>
             )}
-            {error && <p className="text-red-500 text-xs font-black text-center bg-red-50 p-3 rounded-xl border border-red-100">{error}</p>}
+            {error && <p className="text-red-600 text-[10px] font-black uppercase text-center bg-red-50 p-3 rounded-xl border border-red-100 animate-pulse">{error}</p>}
+            
             <button type="submit" disabled={loading} className="w-full bg-emerald-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-emerald-200 hover:bg-emerald-700 hover:shadow-emerald-300 transition-all flex items-center justify-center gap-2 uppercase tracking-widest text-sm active:translate-y-0.5">
-              {loading ? 'Processing...' : (isSignUp ? 'Genesis Account' : 'Initialize Node')}
+              {loading ? 'Processing Node...' : (isSignUp ? 'Register Identity' : 'Secure Login')}
             </button>
-            <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="w-full text-emerald-600 text-xs font-black hover:underline uppercase tracking-widest opacity-60 hover:opacity-100 transition-opacity">
-              {isSignUp ? 'Already registered? Sign In' : "New node? Request Registration"}
+            
+            <button type="button" onClick={() => { setIsSignUp(!isSignUp); setError(''); }} className="w-full text-emerald-600 text-[10px] font-black hover:underline uppercase tracking-widest opacity-60 hover:opacity-100 transition-opacity">
+              {isSignUp ? 'Already registered? Access Hub' : "New entity? Request Blockchain ID"}
             </button>
           </form>
+          <p className="mt-8 text-[9px] text-gray-400 text-center leading-relaxed">By logging in, you agree to the EcoChain protocol standards for data accuracy and environmental reporting.</p>
         </div>
       </div>
     </div>

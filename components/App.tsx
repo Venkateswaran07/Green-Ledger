@@ -1,14 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
-import { Block, Category, StageData, ActorType, MultiChainState } from './types';
-import { createBlock, validateChain } from './services/blockchainService';
-import ActorForm from './components/ActorForm';
-import ChainVisualizer from './components/ChainVisualizer';
-import EcoViz from './components/EcoViz';
-import Certificate from './components/Certificate';
-import LoginPage, { CATEGORIES } from './components/LoginPage';
-import Chatbot from './components/Chatbot';
-import AdminDashboard from './components/AdminDashboard';
+import { Block, Category, StageData, ActorType, MultiChainState } from '../types';
+import { createBlock, validateChain } from '../services/blockchainService';
+import ActorForm from '../components/ActorForm';
+import ChainVisualizer from '../components/ChainVisualizer';
+import EcoViz from '../components/EcoViz';
+import Certificate from '../components/Certificate';
+import LoginPage, { CATEGORIES } from '../components/LoginPage';
+import Chatbot from '../components/Chatbot';
+import AdminDashboard from '../components/AdminDashboard';
 import { Leaf, PlusCircle, Link as LinkIcon, BarChart3, FileBadge, LogOut, ShieldAlert, Settings, LayoutDashboard } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -168,13 +168,13 @@ const App: React.FC = () => {
                         </div>
                     </div>
                     <select 
-                        className="bg-gray-50 border-none text-xs font-bold rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+                        className="bg-gray-50 border border-gray-100 text-xs font-bold text-slate-950 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
                         value={activeBatchId || ''}
                         onChange={(e) => setActiveBatchId(e.target.value)}
                     >
-                        <option value="">Switch Batch...</option>
+                        <option value="" className="text-gray-400">Switch Batch...</option>
                         {Object.keys(activeCategoryChains).map(id => (
-                            <option key={id} value={id}>{id}</option>
+                            <option key={id} value={id} className="text-slate-950 font-bold">{id}</option>
                         ))}
                     </select>
                 </div>
@@ -209,6 +209,7 @@ const App: React.FC = () => {
         .nav-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 0.875rem; font-weight: 600; color: #64748b; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
         .nav-btn:hover { background-color: #f1f5f9; color: #0f172a; }
         .nav-btn.active { background-color: #ecfdf5; color: #059669; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+        select { color: #020617 !important; }
       `}</style>
     </div>
   );
