@@ -1,56 +1,236 @@
 
-import React, { useState, useEffect } from 'react';
-import { Category } from '../types';
+import React, { useState } from 'react';
+import { Category, FieldDefinition } from '../types';
 import { 
-  Tractor, Factory, Truck, Coffee, Store, ShieldCheck, ArrowLeft, 
-  Mail, Lock, User, UserPlus, LogIn, Flame, Beaker, Biohazard, 
-  FlaskConical, Boxes, ChevronRight, Settings, ShieldAlert, Leaf
+  ArrowLeft, Flame, Beaker, Biohazard, 
+  ChevronRight, ShieldAlert, Leaf, Lock,
+  FlaskConical, Boxes
 } from 'lucide-react';
+
+const COMMON_FIELDS: FieldDefinition[] = [
+  { id: 'envScore', label: 'Efficiency Index', type: 'number', unit: '%', placeholder: '0-100' }
+];
 
 export const CATEGORIES: Category[] = [
   {
     id: 'thermal',
-    name: 'Roasting & Thermal Processing',
+    name: 'ROASTING & THERMAL PROCESSING',
+    code: 100,
     icon: 'Flame',
-    description: 'Heat-based transformation and preservation.',
-    roles: ['Raw Material Sourcer', 'Quality Grader', 'Roast Master', 'Cooling Operator', 'Degassing Supervisor', 'Packaging Specialist', 'Storage Manager']
+    description: 'Advanced heat-based transformation.',
+    roles: ['Raw Material Sourcer', 'Quality Grader', 'Roast Master', 'Cooling Operator', 'Degassing Supervisor', 'Packaging Specialist', 'Storage Manager'],
+    roleFields: {
+      'Raw Material Sourcer': [
+        { id: 'weight_kg', label: 'Inbound Weight', type: 'number', unit: 'kg' },
+        { id: 'transport_dist', label: 'Logistics Distance', type: 'number', unit: 'km' },
+        ...COMMON_FIELDS
+      ],
+      'Quality Grader': [
+        { id: 'moisture_content', label: 'Moisture Content', type: 'number', unit: '%' },
+        { id: 'defect_count', label: 'Primary Defects', type: 'number' },
+        ...COMMON_FIELDS
+      ],
+      'Roast Master': [
+        { id: 'targetTemp', label: 'Roast Peak Temp', type: 'number', unit: '°C' },
+        { id: 'energyKwh', label: 'Burner Gas Usage', type: 'number', unit: 'm³' },
+        { id: 'roast_duration', label: 'Roast Time', type: 'number', unit: 'min' },
+        ...COMMON_FIELDS
+      ],
+      'Cooling Operator': [
+        { id: 'air_volume', label: 'Cooling Airflow', type: 'number', unit: 'm³/h' },
+        { id: 'cooling_time', label: 'Cooling Duration', type: 'number', unit: 'sec' },
+        ...COMMON_FIELDS
+      ],
+      'Degassing Supervisor': [
+        { id: 'co2_level', label: 'CO2 Emission Level', type: 'number', unit: 'ppm' },
+        { id: 'storage_days', label: 'Venting Period', type: 'number', unit: 'days' },
+        ...COMMON_FIELDS
+      ],
+      'Packaging Specialist': [
+        { id: 'material_weight', label: 'Packaging Mass', type: 'number', unit: 'g' },
+        { id: 'machine_energy', label: 'Sealer Power', type: 'number', unit: 'kWh' },
+        ...COMMON_FIELDS
+      ],
+      'Storage Manager': [
+        { id: 'humidity', label: 'Silo Humidity', type: 'number', unit: '%' },
+        { id: 'hvac_usage', label: 'Climate Control Energy', type: 'number', unit: 'kWh' },
+        ...COMMON_FIELDS
+      ]
+    },
+    products: [{ id: 'coffee', name: 'Coffee', code: 101 }, { id: 'chemicals', name: 'Chemicals', code: 102 }]
   },
   {
     id: 'mixing',
-    name: 'Mixing & Blending',
+    name: 'MIXING & BLENDING',
+    code: 200,
     icon: 'Beaker',
-    description: 'Formulation and composite ingredient batching.',
-    roles: ['Ingredient Procurement Manager', 'Formulation Scientist', 'Weighing & Batching Technician', 'Mix Operator', 'Dough/Batter Technician', 'Quality Control Analyst', 'Process Engineer']
+    description: 'Precision ingredient batching.',
+    roles: ['Ingredient Procurement Manager', 'Formulation Scientist', 'Weighing & Batching Technician', 'Mix Operator', 'Dough Technician', 'QC Analyst', 'Process Engineer'],
+    roleFields: {
+      'Ingredient Procurement Manager': [
+        { id: 'supply_distance', label: 'Supply Origin Distance', type: 'number', unit: 'km' },
+        { id: 'mass_inbound', label: 'Component Mass', type: 'number', unit: 'kg' },
+        ...COMMON_FIELDS
+      ],
+      'Formulation Scientist': [
+        { id: 'chemical_reactivity', label: 'Compound Complexity', type: 'select', options: ['Low', 'Medium', 'High'] },
+        ...COMMON_FIELDS
+      ],
+      'Weighing & Batching Technician': [
+        { id: 'energyKwh', label: 'Precision Scale Power', type: 'number', unit: 'kWh' },
+        { id: 'accuracy_offset', label: 'Calibration Drift', type: 'number', unit: 'mg' },
+        ...COMMON_FIELDS
+      ],
+      'Mix Operator': [
+        { id: 'rpm', label: 'Mixer Rotation', type: 'number', unit: 'RPM' },
+        { id: 'energyKwh', label: 'Mixing Power Draw', type: 'number', unit: 'kWh' },
+        { id: 'duration', label: 'Mixing Cycle', type: 'number', unit: 'min' },
+        ...COMMON_FIELDS
+      ],
+      'Dough Technician': [
+        { id: 'targetTemp', label: 'Hydration Temp', type: 'number', unit: '°C' },
+        { id: 'viscosity', label: 'Final Viscosity', type: 'number', unit: 'cP' },
+        ...COMMON_FIELDS
+      ],
+      'QC Analyst': [
+        { id: 'lab_waste', label: 'Testing Waste Mass', type: 'number', unit: 'g' },
+        ...COMMON_FIELDS
+      ],
+      'Process Engineer': [
+        { id: 'optimization_gain', label: 'Efficiency Improvement', type: 'number', unit: '%' },
+        ...COMMON_FIELDS
+      ]
+    },
+    products: [{ id: 'pharma', name: 'Pharma', code: 201 }, { id: 'food', name: 'Food Dough', code: 202 }]
   },
   {
     id: 'fermentation',
-    name: 'Fermentation & Culturing',
+    name: 'FERMENTATION & CULTURING',
+    code: 300,
     icon: 'Biohazard',
-    description: 'Biological and microbial processing.',
-    roles: ['Substrate Preparer', 'Culture Master', 'Fermentation Technician', 'Maturation Supervisor', 'Microbial Quality Controller', 'Stabilization Specialist', 'Blending Master']
+    description: 'Biological microbial processing.',
+    roles: ['Substrate Preparer', 'Culture Master', 'Fermentation Tech', 'Maturation Supervisor', 'Microbial Controller', 'Stabilization Specialist', 'Blending Master'],
+    roleFields: {
+      'Substrate Preparer': [
+        { id: 'volume', label: 'Medium Volume', type: 'number', unit: 'L' },
+        { id: 'sterilization_temp', label: 'Sterilization Temp', type: 'number', unit: '°C' },
+        ...COMMON_FIELDS
+      ],
+      'Culture Master': [
+        { id: 'strain_purity', label: 'Strain Purity', type: 'number', unit: '%' },
+        ...COMMON_FIELDS
+      ],
+      'Fermentation Tech': [
+        { id: 'targetTemp', label: 'Incubation Temp', type: 'number', unit: '°C' },
+        { id: 'oxygen_flow', label: 'Aeration Rate', type: 'number', unit: 'L/min' },
+        { id: 'energyKwh', label: 'Bioreactor Agitation', type: 'number', unit: 'kWh' },
+        ...COMMON_FIELDS
+      ],
+      'Maturation Supervisor': [
+        { id: 'aging_days', label: 'Aging Duration', type: 'number', unit: 'days' },
+        { id: 'energyKwh', label: 'Cooling/Heat Exchange', type: 'number', unit: 'kWh' },
+        ...COMMON_FIELDS
+      ],
+      'Microbial Controller': [
+        { id: 'cell_density', label: 'Biomass Density', type: 'number', unit: 'g/L' },
+        ...COMMON_FIELDS
+      ],
+      'Stabilization Specialist': [
+        { id: 'filtration_load', label: 'Filter Flux', type: 'number', unit: 'LMH' },
+        ...COMMON_FIELDS
+      ],
+      'Blending Master': [
+        { id: 'yield_recovery', label: 'Final Yield', type: 'number', unit: '%' },
+        ...COMMON_FIELDS
+      ]
+    },
+    products: [{ id: 'brewing', name: 'Brewing', code: 301 }, { id: 'bioplastics', name: 'Bio-plastics', code: 302 }]
   },
   {
     id: 'extraction',
-    name: 'Extraction & Refining',
+    name: 'EXTRACTION & REFINING',
+    code: 400,
     icon: 'FlaskConical',
     description: 'Purity-focused substance isolation.',
-    roles: ['Raw Material Prepper', 'Extraction Operator', 'Refinement Technician', 'Purity Analyst', 'Solvent Recovery Specialist', 'Byproduct Manager', 'Concentration Controller']
+    roles: ['Raw Ore Handler', 'Solvent Specialist', 'Extraction Operator', 'Filtration Tech', 'Refining Manager', 'Purity Lab Analyst', 'Waste Compliance Officer'],
+    roleFields: {
+      'Raw Ore Handler': [
+        { id: 'total_mass', label: 'Raw Intake', type: 'number', unit: 'kg' },
+        ...COMMON_FIELDS
+      ],
+      'Solvent Specialist': [
+        { id: 'solvent_volume', label: 'Solvent Charge', type: 'number', unit: 'L' },
+        { id: 'recovery_rate', label: 'Recovery Efficiency', type: 'number', unit: '%' },
+        ...COMMON_FIELDS
+      ],
+      'Extraction Operator': [
+        { id: 'targetTemp', label: 'Extraction Temp', type: 'number', unit: '°C' },
+        { id: 'pressure', label: 'Vessel Pressure', type: 'number', unit: 'bar' },
+        { id: 'energyKwh', label: 'Pump Energy', type: 'number', unit: 'kWh' },
+        ...COMMON_FIELDS
+      ],
+      'Filtration Tech': [
+        { id: 'mesh_size', label: 'Micron Rating', type: 'number', unit: 'μm' },
+        ...COMMON_FIELDS
+      ],
+      'Refining Manager': [
+        { id: 'purity_percent', label: 'Target Purity', type: 'number', unit: '%' },
+        { id: 'energyKwh', label: 'Refining Power', type: 'number', unit: 'kWh' },
+        ...COMMON_FIELDS
+      ],
+      'Purity Lab Analyst': [
+        { id: 'trace_elements', label: 'Impurities Detected', type: 'number', unit: 'ppm' },
+        ...COMMON_FIELDS
+      ],
+      'Waste Compliance Officer': [
+        { id: 'waste_treated', label: 'Hazardous Waste Neutralized', type: 'number', unit: 'L' },
+        { id: 'energyKwh', label: 'Treatment Plant Energy', type: 'number', unit: 'kWh' },
+        ...COMMON_FIELDS
+      ]
+    },
+    products: [{ id: 'oils', name: 'Essential Oils', code: 401 }, { id: 'lithium', name: 'Lithium', code: 402 }]
   },
   {
     id: 'assembly',
-    name: 'Assembly & Packaging',
+    name: 'ASSEMBLY & PACKAGING',
+    code: 500,
     icon: 'Boxes',
-    description: 'Multi-component product finishing.',
-    roles: ['Component Sourcing Manager', 'Assembly Line Supervisor', 'Quality Inspector', 'Packaging Designer', 'Labeling Specialist', 'Final Testing Technician', 'Packing & Shipping Coordinator']
+    description: 'Component integration & finishing.',
+    roles: ['Component Inbound', 'Micro-Assembly Tech', 'Integration Specialist', 'Quality Assurance', 'Precision Packager', 'Buffer Manager', 'Dispatch Coordinator'],
+    roleFields: {
+      'Component Inbound': [
+        { id: 'part_count', label: 'Unit Quantities', type: 'number' },
+        ...COMMON_FIELDS
+      ],
+      'Micro-Assembly Tech': [
+        { id: 'energyKwh', label: 'Assembly Robot Power', type: 'number', unit: 'kWh' },
+        { id: 'scrap_rate', label: 'Component Scrappage', type: 'number', unit: '%' },
+        ...COMMON_FIELDS
+      ],
+      'Integration Specialist': [
+        { id: 'energyKwh', label: 'Burn-in Testing Power', type: 'number', unit: 'kWh' },
+        ...COMMON_FIELDS
+      ],
+      'Quality Assurance': [
+        { id: 'failure_count', label: 'Defectives Blocked', type: 'number' },
+        ...COMMON_FIELDS
+      ],
+      'Precision Packager': [
+        { id: 'plastic_mass', label: 'Polymer Usage', type: 'number', unit: 'g' },
+        ...COMMON_FIELDS
+      ],
+      'Buffer Manager': [
+        { id: 'idle_energy', label: 'Staging Power Consumption', type: 'number', unit: 'kWh' },
+        ...COMMON_FIELDS
+      ],
+      'Dispatch Coordinator': [
+        { id: 'outbound_weight', label: 'Total Shipment Mass', type: 'number', unit: 'kg' },
+        ...COMMON_FIELDS
+      ]
+    },
+    products: [{ id: 'electronics', name: 'Electronics', code: 501 }, { id: 'packaging', name: 'Packaging', code: 502 }]
   }
 ];
-
-interface RegisteredUser {
-  email: string;
-  name: string;
-  categoryId: string;
-  role: string;
-}
 
 interface LoginPageProps {
   onLogin: (category: Category, role: string, isAdmin?: boolean) => void;
@@ -59,217 +239,103 @@ interface LoginPageProps {
 const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
-  const [isSignUp, setIsSignUp] = useState(false);
   const [isAdminPortal, setIsAdminPortal] = useState(false);
-  
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const getRegistry = (): RegisteredUser[] => {
-    const saved = localStorage.getItem('ecochain_users_v2');
-    return saved ? JSON.parse(saved) : [];
-  };
-
-  const saveRegistry = (users: RegisteredUser[]) => {
-    localStorage.setItem('ecochain_users_v2', JSON.stringify(users));
-  };
-
-  const getIcon = (iconName: string, size = 24) => {
-    const icons: Record<string, any> = { Flame, Beaker, Biohazard, FlaskConical, Boxes, ShieldCheck, Settings };
-    const IconComp = icons[iconName] || ShieldCheck;
-    return <IconComp size={size} />;
-  };
-
-  const resetAuthForm = () => {
-    setEmail('');
-    setPassword('');
-    setConfirmPassword('');
-    setName('');
-    setError('');
-    setIsSignUp(false);
-  };
 
   const handleAuthSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
-    
-    setTimeout(() => {
-        if (isAdminPortal) {
-            if (email.toLowerCase() === 'admin@ecochain.com' && password === 'admin123') {
-                setLoading(false);
-                onLogin(CATEGORIES[0], 'System Administrator', true);
-            } else {
-                setLoading(false);
-                setError('Access Denied: Invalid admin credentials.');
-            }
-            return;
-        }
+    if (isAdminPortal) {
+      if (email === 'admin@ecochain.com' && password === 'admin123') {
+        onLogin(CATEGORIES[0], 'System Administrator', true);
+      }
+      return;
+    }
+    onLogin(selectedCategory!, selectedRole!, false);
+  };
 
-        if (!email || !password) { setError('All fields required'); setLoading(false); return; }
-        
-        const registry = getRegistry();
-        const normalizedEmail = email.toLowerCase().trim();
-
-        if (isSignUp) {
-            if (password !== confirmPassword) { setError('Passwords do not match'); setLoading(false); return; }
-            if (!name) { setError('Name is required'); setLoading(false); return; }
-
-            const existing = registry.find(u => u.email === normalizedEmail);
-            if (existing) {
-                const catName = CATEGORIES.find(c => c.id === existing.categoryId)?.name || 'another category';
-                setError(`Email locked to ${catName} / ${existing.role}. Please use a distinct email.`);
-                setLoading(false);
-                return;
-            }
-
-            const newUser: RegisteredUser = {
-                email: normalizedEmail,
-                name,
-                categoryId: selectedCategory!.id,
-                role: selectedRole!
-            };
-            
-            saveRegistry([...registry, newUser]);
-            setLoading(false);
-            onLogin(selectedCategory!, selectedRole!, false);
-        } else {
-            const user = registry.find(u => u.email === normalizedEmail);
-            
-            if (!user) {
-                setError('Account not found. Ensure you are in the correct category/role and have signed up.');
-                setLoading(false);
-                return;
-            }
-            
-            if (user.categoryId !== selectedCategory!.id) {
-                const intendedCat = CATEGORIES.find(c => c.id === user.categoryId)?.name;
-                setError(`This account belongs to ${intendedCat}. Access denied for ${selectedCategory!.name}.`);
-                setLoading(false);
-                return;
-            }
-
-            if (user.role !== selectedRole) {
-                setError(`This email is registered as ${user.role}. You cannot login as ${selectedRole} with this account.`);
-                setLoading(false);
-                return;
-            }
-
-            setLoading(false);
-            onLogin(selectedCategory!, selectedRole!, false);
-        }
-    }, 800);
+  const renderIcon = (iconName: string) => {
+    const props = { size: 32, className: "text-[#059669]" };
+    switch (iconName) {
+      case 'Flame': return <Flame {...props} />;
+      case 'Beaker': return <Beaker {...props} />;
+      case 'Biohazard': return <Biohazard {...props} />;
+      case 'FlaskConical': return <FlaskConical {...props} />;
+      case 'Boxes': return <Boxes {...props} />;
+      default: return <Leaf {...props} />;
+    }
   };
 
   if (isAdminPortal) {
-      return (
-        <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-red-500 animate-in fade-in zoom-in duration-300">
-            <div className="bg-slate-800 p-8 text-center relative">
-              <button onClick={() => { setIsAdminPortal(false); resetAuthForm(); }} className="absolute left-6 top-6 text-white/70 hover:text-white transition-colors">
-                <ArrowLeft size={24} />
-              </button>
-              <div className="mx-auto bg-red-500 w-16 h-16 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-red-500/30">
-                <Settings size={32} className="text-white" />
-              </div>
-              <h2 className="text-2xl font-black text-white mb-1 uppercase tracking-tighter">Admin Control</h2>
-              <p className="text-red-400 text-[10px] font-black uppercase tracking-widest">Master Protocol Access</p>
-            </div>
-            <div className="p-8">
-              <form onSubmit={handleAuthSubmit} className="space-y-4">
-                <div className="relative group">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                  <input type="email" placeholder="Admin Email" className="w-full pl-10 p-3 bg-white rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-red-500 text-slate-950 font-bold placeholder:text-gray-400" value={email} onChange={e => setEmail(e.target.value)} />
-                </div>
-                <div className="relative group">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                  <input type="password" placeholder="Admin Password" className="w-full pl-10 p-3 bg-white rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-red-500 text-slate-950 font-bold placeholder:text-gray-400" value={password} onChange={e => setPassword(e.target.value)} />
-                </div>
-                {error && <p className="text-red-600 text-[10px] font-black uppercase text-center bg-red-50 p-2 rounded border border-red-100">{error}</p>}
-                <div className="bg-amber-50 p-3 rounded-lg border border-amber-100 text-[10px] text-amber-700 font-bold mb-4">
-                  DEVELOPER NOTE: admin@ecochain.com / admin123
-                </div>
-                <button type="submit" disabled={loading} className="w-full bg-slate-900 text-white font-black py-4 rounded-xl shadow-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-2 uppercase tracking-widest active:scale-[0.98]">
-                  {loading ? 'Authenticating...' : 'Enter System Console'}
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      );
-  }
-
-  if (!selectedCategory) {
     return (
-      <div className="min-h-screen bg-emerald-50 flex items-center justify-center p-6 relative">
-        <div className="max-w-5xl w-full">
-          <div className="text-center mb-12">
-            <div className="inline-block bg-emerald-600 text-white p-3 rounded-2xl mb-6 shadow-xl shadow-emerald-200"><Leaf size={40} /></div>
-            <h1 className="text-5xl font-black text-emerald-900 mb-4 tracking-tighter">EcoChain Protocol</h1>
-            <p className="text-emerald-700/70 text-lg font-medium">Verified Industry Sustainability Ledger</p>
+      <div className="min-h-screen bg-[#f4fff9] flex items-center justify-center p-6">
+        <div className="max-w-md w-full bg-white rounded-[2.5rem] shadow-2xl p-10 border border-[#e8f5ed]">
+          <button onClick={() => setIsAdminPortal(false)} className="text-slate-400 hover:text-[#059669] mb-8 flex items-center gap-2 text-sm font-bold">
+            <ArrowLeft size={18} /> Back to Public Portal
+          </button>
+          <div className="bg-[#059669] w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-xl shadow-[#05966922] mx-auto">
+            <Lock size={30} className="text-white" />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {CATEGORIES.map((cat) => (
-              <button 
-                key={cat.id} 
-                onClick={() => setSelectedCategory(cat)}
-                className="bg-white p-8 rounded-3xl shadow-sm border border-emerald-100 hover:shadow-2xl hover:-translate-y-2 transition-all text-left group overflow-hidden relative"
-              >
-                <div className="absolute -right-4 -top-4 text-emerald-50/50 group-hover:text-emerald-50 transition-colors">
-                    {getIcon(cat.icon, 120)}
-                </div>
-                <div className="bg-emerald-50 w-14 h-14 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-sm relative z-10">
-                  {getIcon(cat.icon, 32)}
-                </div>
-                <div className="relative z-10">
-                    <h3 className="text-2xl font-black text-gray-900 mb-2 leading-tight">{cat.name}</h3>
-                    <p className="text-gray-500 text-sm mb-6 font-medium leading-relaxed">{cat.description}</p>
-                    <div className="flex items-center text-emerald-600 font-black text-xs uppercase tracking-widest">
-                    Enter Ecosystem <ChevronRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform" />
-                    </div>
-                </div>
-              </button>
-            ))}
-          </div>
-          <div className="mt-12 text-center">
-            <button 
-                onClick={() => { setIsAdminPortal(true); resetAuthForm(); }}
-                className="inline-flex items-center gap-2 text-gray-400 hover:text-red-500 font-black text-[10px] uppercase tracking-[0.2em] transition-colors"
-            >
-                <ShieldAlert size={14} /> Administrative Gateway
+          <h2 className="text-2xl font-black text-slate-900 text-center mb-2">Admin Gateway</h2>
+          <p className="text-slate-400 text-sm text-center mb-8 uppercase tracking-widest font-bold">System oversight & management</p>
+          <form onSubmit={handleAuthSubmit} className="space-y-4">
+            <input 
+              type="email" 
+              placeholder="Administrator Email" 
+              className="w-full bg-[#f9fbf9] border border-[#e8f5ed] p-4 rounded-2xl outline-none focus:ring-4 focus:ring-[#05966911] focus:border-[#059669] transition-all" 
+              value={email} 
+              onChange={e => setEmail(e.target.value)} 
+            />
+            <input 
+              type="password" 
+              placeholder="Access Key" 
+              className="w-full bg-[#f9fbf9] border border-[#e8f5ed] p-4 rounded-2xl outline-none focus:ring-4 focus:ring-[#05966911] focus:border-[#059669] transition-all" 
+              value={password} 
+              onChange={e => setPassword(e.target.value)} 
+            />
+            <button type="submit" className="w-full bg-[#059669] text-white font-black py-5 rounded-2xl hover:bg-[#047857] transition-all shadow-lg shadow-[#05966922] mt-4 uppercase tracking-widest">
+              Authorize Entry
             </button>
-          </div>
+          </form>
         </div>
       </div>
     );
   }
 
-  if (!selectedRole) {
+  if (!selectedCategory) {
     return (
-      <div className="min-h-screen bg-emerald-50 flex items-center justify-center p-6">
-        <div className="max-w-4xl w-full">
-          <button onClick={() => setSelectedCategory(null)} className="flex items-center gap-2 text-emerald-700 mb-10 hover:underline font-black uppercase text-xs tracking-widest transition-all">
-            <ArrowLeft size={18} /> Back to Hub
-          </button>
-          <div className="mb-10">
-            <h2 className="text-4xl font-black text-gray-900 mb-2 tracking-tight">{selectedCategory.name}</h2>
-            <p className="text-gray-500 font-bold italic">Assign your technical role within this ecosystem.</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {selectedCategory.roles.map((role) => (
-              <button 
-                key={role} 
-                onClick={() => { setSelectedRole(role); resetAuthForm(); }}
-                className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:border-emerald-500 hover:text-emerald-600 hover:shadow-lg transition-all font-black text-xs text-gray-600 text-left flex justify-between items-center group uppercase tracking-tight"
-              >
-                {role}
-                <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-              </button>
-            ))}
+      <div className="min-h-screen bg-[#f4fff9] flex flex-col items-center pt-20 px-6">
+        <div className="bg-[#059669] p-3 rounded-2xl text-white mb-6 shadow-xl shadow-[#05966933]">
+          <Leaf size={40} />
+        </div>
+        <h1 className="text-5xl font-black text-[#1e3a2b] mb-4">Green Ledger</h1>
+        <p className="text-[#059669] font-bold tracking-tight mb-20 text-lg opacity-80">Select Industrial Hierarchy Category</p>
+
+        <div className="max-w-6xl w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
+          {CATEGORIES.map(cat => (
+            <div 
+              key={cat.id} 
+              className="bg-white rounded-[2rem] p-8 shadow-[0_15px_30px_-5px_rgba(5,150,105,0.08)] border border-transparent hover:border-[#05966922] transition-all group flex flex-col justify-between items-start min-h-[240px]"
+            >
+              <div className="bg-[#f0fdf4] p-5 rounded-2xl mb-8 group-hover:scale-110 transition-transform">
+                {renderIcon(cat.icon)}
+              </div>
+              <div>
+                <h3 className="text-2xl font-black text-[#1e3a2b] mb-1">Code {cat.code}</h3>
+                <p className="text-[#64748b] font-bold text-xs uppercase tracking-[0.15em] mb-6">{cat.name}</p>
+                <button 
+                  onClick={() => setSelectedCategory(cat)}
+                  className="text-[#059669] font-black text-xs uppercase tracking-widest flex items-center gap-2 hover:translate-x-1 transition-transform"
+                >
+                  Enter Domain <ChevronRight size={14} />
+                </button>
+              </div>
+            </div>
+          ))}
+          <div className="lg:col-span-1 flex items-center justify-center">
+             <button onClick={() => setIsAdminPortal(true)} className="text-slate-300 hover:text-[#059669] transition-all flex items-center gap-2 text-xs font-black uppercase tracking-widest">
+                <ShieldAlert size={14} /> System Node Gateway
+             </button>
           </div>
         </div>
       </div>
@@ -277,55 +343,56 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   }
 
   return (
-    <div className="min-h-screen bg-emerald-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-emerald-100 animate-in fade-in slide-in-from-bottom-5 duration-400">
-        <div className="bg-emerald-600 p-10 text-center relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-12 opacity-10 text-white rotate-12">
-            {getIcon(selectedCategory.icon, 140)}
+    <div className="min-h-screen bg-[#f4fff9] flex items-center justify-center p-6">
+      <div className="max-w-md w-full bg-white rounded-[2.5rem] shadow-2xl p-10 border border-[#e8f5ed]">
+        <button 
+          onClick={() => { setSelectedCategory(null); setSelectedRole(null); }} 
+          className="text-slate-400 hover:text-[#059669] mb-8 flex items-center gap-2 text-sm font-bold transition-colors"
+        >
+          <ArrowLeft size={18} /> Back
+        </button>
+        
+        <h2 className="text-3xl font-black text-[#1e3a2b] mb-2">Authority Entry</h2>
+        <p className="text-slate-400 text-sm mb-10 font-medium">Identify your operational role in {selectedCategory.name}</p>
+
+        {!selectedRole ? (
+          <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1 scrollbar-thin">
+            {selectedCategory.roles.map(role => (
+              <button 
+                key={role} 
+                onClick={() => setSelectedRole(role)} 
+                className="w-full text-left p-5 bg-[#f9fbf9] border border-[#e8f5ed] rounded-2xl text-slate-700 font-bold hover:border-[#059669] hover:bg-[#f0fdf4] hover:text-[#059669] transition-all flex justify-between items-center"
+              >
+                {role} <ChevronRight size={18} />
+              </button>
+            ))}
           </div>
-          <button onClick={() => setSelectedRole(null)} className="absolute left-6 top-6 text-white/70 hover:text-white transition-colors z-20">
-            <ArrowLeft size={24} />
-          </button>
-          <div className="mx-auto bg-white/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-md border border-white/30 relative z-20 shadow-xl">
-            {getIcon(selectedCategory.icon, 32)}
-          </div>
-          <h2 className="text-3xl font-black text-white mb-1 tracking-tight relative z-20">{selectedRole}</h2>
-          <p className="text-emerald-100 text-[10px] font-black uppercase tracking-[0.2em] relative z-20">{selectedCategory.name}</p>
-        </div>
-        <div className="p-10">
-          <form onSubmit={handleAuthSubmit} className="space-y-5">
-            {isSignUp && (
-              <div className="relative group">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
-                <input type="text" placeholder="Full Professional Name" className="w-full pl-12 p-4 bg-white rounded-2xl border border-gray-100 outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-slate-950 font-bold placeholder:text-gray-400 transition-all" value={name} onChange={e => setName(e.target.value)} required />
-              </div>
-            )}
-            <div className="relative group">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
-              <input type="email" placeholder="Unique Email Identity" className="w-full pl-12 p-4 bg-white rounded-2xl border border-gray-100 outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-slate-950 font-bold placeholder:text-gray-400 transition-all" value={email} onChange={e => setEmail(e.target.value)} required />
+        ) : (
+          <form onSubmit={handleAuthSubmit} className="space-y-4">
+            <div className="p-5 bg-[#f0fdf4] border border-[#dcfce7] rounded-2xl mb-6">
+              <p className="text-[10px] font-black text-[#059669] uppercase tracking-[0.2em] mb-1">Active Ledger Node</p>
+              <p className="font-black text-[#1e3a2b]">{selectedRole}</p>
             </div>
-            <div className="relative group">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
-              <input type="password" placeholder="System Password" className="w-full pl-12 p-4 bg-white rounded-2xl border border-gray-100 outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-slate-950 font-bold placeholder:text-gray-400 transition-all" value={password} onChange={e => setPassword(e.target.value)} required />
-            </div>
-            {isSignUp && (
-              <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
-                <input type="password" placeholder="Confirm Password" className="w-full pl-12 p-4 bg-white rounded-2xl border border-gray-100 outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-slate-950 font-bold placeholder:text-gray-400 transition-all" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
-              </div>
-            )}
-            {error && <p className="text-red-600 text-[10px] font-black uppercase text-center bg-red-50 p-3 rounded-xl border border-red-100 animate-pulse">{error}</p>}
-            
-            <button type="submit" disabled={loading} className="w-full bg-emerald-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-emerald-200 hover:bg-emerald-700 hover:shadow-emerald-300 transition-all flex items-center justify-center gap-2 uppercase tracking-widest text-sm active:translate-y-0.5">
-              {loading ? 'Processing Node...' : (isSignUp ? 'Register Identity' : 'Secure Login')}
-            </button>
-            
-            <button type="button" onClick={() => { setIsSignUp(!isSignUp); setError(''); }} className="w-full text-emerald-600 text-[10px] font-black hover:underline uppercase tracking-widest opacity-60 hover:opacity-100 transition-opacity">
-              {isSignUp ? 'Already registered? Access Hub' : "New entity? Request Blockchain ID"}
+            <input 
+              type="email" 
+              placeholder="Operator Identity Email" 
+              className="w-full bg-[#f9fbf9] border border-[#e8f5ed] p-4 rounded-2xl outline-none focus:ring-4 focus:ring-[#05966911] focus:border-[#059669] transition-all" 
+              required 
+            />
+            <input 
+              type="password" 
+              placeholder="Cryptographic Passphrase" 
+              className="w-full bg-[#f9fbf9] border border-[#e8f5ed] p-4 rounded-2xl outline-none focus:ring-4 focus:ring-[#05966911] focus:border-[#059669] transition-all" 
+              required 
+            />
+            <button 
+              type="submit" 
+              className="w-full bg-[#059669] text-white font-black py-5 rounded-2xl hover:bg-[#047857] transition-all shadow-lg shadow-[#05966922] mt-4 uppercase tracking-widest"
+            >
+              Verify Authority
             </button>
           </form>
-          <p className="mt-8 text-[9px] text-gray-400 text-center leading-relaxed">By logging in, you agree to the EcoChain protocol standards for data accuracy and environmental reporting.</p>
-        </div>
+        )}
       </div>
     </div>
   );

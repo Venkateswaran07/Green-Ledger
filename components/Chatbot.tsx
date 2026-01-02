@@ -111,7 +111,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ currentUser, currentCategory }) => {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about EcoChain..."
+              placeholder="Ask about Green Ledger..."
               className="flex-grow bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-gray-900"
             />
             <button

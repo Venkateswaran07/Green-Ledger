@@ -1,48 +1,73 @@
 
 import { StageData } from '../types';
 
+// Multipliers by Product ID (Numeric Codes)
+// Format: code: { baseFactor, thermal multiplier }
+export const PRODUCT_MULTIPLIERS: Record<number, { factor: number; thermal: number }> = {
+  // 100s: Roasting
+  101: { factor: 1.2, thermal: 0.8 },  // Coffee
+  102: { factor: 2.5, thermal: 1.5 },  // Chemicals
+  // 200s: Mixing
+  201: { factor: 1.8, thermal: 0.5 },  // Pharma
+  202: { factor: 1.1, thermal: 0.4 },  // Food
+  // 300s: Fermentation
+  301: { factor: 0.9, thermal: 0.3 },  // Brewing
+  302: { factor: 2.1, thermal: 0.6 },  // Bio-plastics
+  // 400s: Extraction
+  401: { factor: 1.5, thermal: 0.9 },  // Essential Oils
+  402: { factor: 4.2, thermal: 1.8 },  // Lithium
+  // 500s: Assembly
+  501: { factor: 3.5, thermal: 0.2 },  // Electronics
+  502: { factor: 1.3, thermal: 0.1 },  // Packaging
+};
+
 export const calculateEmissions = (data: StageData): number => {
   let co2 = 0;
   
-  // 1. Base Energy Emissions (Standard for all industrial stages)
-  // Average Global grid intensity: ~0.45 kg CO2 per kWh
-  const energyEmissions = (data.energyKwh || 0) * 0.45;
+  const pCode = data.productCode || 101;
+  const multiplier = PRODUCT_MULTIPLIERS[pCode] || { factor: 1.0, thermal: 0.5 };
+
+  // 1. Energy Base Emissions (Default to 0 if not provided, allowing other factors to dominate)
+  // Use Number() to safely handle both strings from form inputs and numeric values/defaults
+  const energyKwh = Number(data.energyKwh || data.machine_energy || data.hvac_usage || data.idle_energy || 0);
+  const energyEmissions = energyKwh * 0.45 * multiplier.factor;
   co2 += energyEmissions;
 
-  // 2. Process-Specific Thermal Multipliers
-  // If targetTemp exists, we assume high-heat energy usage
-  if (data.targetTemp) {
-    const heatFactor = (data.targetTemp - 20) * 0.02; // Simple model for heat energy scaling
+  // 2. Transport Impact (Commonly in first stages)
+  // Use Number() to safely handle both strings from form inputs and numeric values/defaults
+  const transportDist = Number(data.transport_dist || data.supply_distance || 0);
+  if (transportDist > 0) {
+    // Use Number() to safely handle both strings from form inputs and numeric values/defaults
+    const transportWeight = Number(data.weight_kg || data.mass_inbound || 1);
+    co2 += (transportDist * transportWeight * 0.0001); // Simplified g/km/kg factor
+  }
+
+  // 3. Thermal Processing Impact
+  // Use Number() to safely handle both strings from form inputs and numeric values/defaults
+  const targetTemp = Number(data.targetTemp || data.sterilization_temp || 0);
+  if (targetTemp > 20) {
+    const heatFactor = (targetTemp - 20) * 0.02 * multiplier.thermal;
     co2 += heatFactor;
   }
 
-  // 3. Pressure-based Multipliers (for extraction)
-  if (data.pressureBar) {
-    const compressionFactor = data.pressureBar * 0.1;
-    co2 += compressionFactor;
+  // 4. Waste/Scrap Penalties
+  // Use Number() to safely handle both strings from form inputs and numeric values/defaults
+  const scrapRate = Number(data.scrap_rate || 0);
+  if (scrapRate > 0) {
+    co2 *= (1 + (scrapRate / 100));
   }
 
-  // 4. Batch Size scaling
-  if (data.batchSize) {
-    // Emissions per kg usually decrease with scale, but total increases
-    co2 += (data.batchSize * 0.01);
-  }
-
-  // 5. Environmental Penalty/Bonus
-  if (data.envScore) {
-    // If envScore is low (<70), add a small carbon penalty for inefficiency
-    if (data.envScore < 70) {
-      co2 *= 1.15;
-    } else if (data.envScore > 90) {
-      co2 *= 0.90; // Green efficiency bonus
-    }
-  }
+  // 5. Efficiency Correction (The envScore field)
+  // FIX: Using Number() instead of parseFloat() because envScore is typed as a number in BaseData,
+  // and passing a number to parseFloat() causes a TypeScript error in strict environments.
+  const envScore = Number(data.envScore || 80);
+  if (envScore < 70) co2 *= 1.15;
+  else if (envScore > 90) co2 *= 0.90;
 
   return parseFloat(co2.toFixed(2));
 };
 
 export const getEfficiencyScore = (totalEmissions: number): number => {
-    // Map total emissions to a 0-100 efficiency score based on an arbitrary industrial baseline
     const score = Math.max(0, 100 - (totalEmissions / 5));
     return Math.round(score);
 }

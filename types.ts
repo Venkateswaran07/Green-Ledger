@@ -1,26 +1,44 @@
 
-export enum ActorType {
-  AUTHORITY = 'Authority',
-  ADMIN = 'Administrator',
-  FARMER = 'Farmer',
-  PROCESSOR = 'Processor',
-  TRANSPORTER = 'Transporter',
-  ROASTER = 'Roaster',
-  RETAILER = 'Retailer'
+export enum UserRole {
+  AUDITOR = 'Auditor',
+  MANAGER = 'Manager',
+  ADMIN = 'Administrator'
+}
+
+export interface FieldDefinition {
+  id: string;
+  label: string;
+  type: 'number' | 'text' | 'select';
+  unit?: string;
+  options?: string[];
+  placeholder?: string;
+  weight?: number; // Used for carbon calculation logic
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  code: number;
 }
 
 export interface Category {
   id: string;
   name: string;
+  code: number;
   icon: string;
   description: string;
   roles: string[];
+  roleFields: Record<string, FieldDefinition[]>; // Map role name to its specific inputs
+  products: Product[];
 }
 
 export interface BaseData {
   actorType: string;
   notes?: string;
   batchId: string;
+  productCode?: number;
+  chainId?: string;
+  envScore?: number;
 }
 
 export interface StageData extends BaseData {
@@ -40,6 +58,8 @@ export interface Block {
   actor: string;
   category: string;
   batchId: string;
+  chainId: string;
+  productCode: number;
   data: StageData;
   emissions: number;
   cumulativeEmissions: number;
@@ -49,5 +69,4 @@ export interface Block {
   isTampered?: boolean;
 }
 
-// Multi-chain state: CategoryID -> BatchID -> Blocks[]
 export type MultiChainState = Record<string, Record<string, Block[]>>;

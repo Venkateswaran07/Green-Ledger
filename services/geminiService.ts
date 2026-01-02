@@ -2,15 +2,17 @@
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
 import { StageData, TrustAnalysis } from "../types";
 
-// Initialize the client using the correct pattern with a named parameter
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Note: GoogleGenAI is instantiated inside functions to ensure it always uses 
+// the most up-to-date configuration and follows SDK usage patterns.
 
+/**
+ * Analyzes a specific stage of the supply chain for trust and anomalies.
+ */
 export const analyzeStageWithGemini = async (
   stageName: string,
   data: StageData
 ): Promise<TrustAnalysis> => {
   if (!process.env.API_KEY) {
-    console.warn("No API Key found. Returning mock analysis.");
     return {
       trustScore: 85,
       anomalies: ["API Key missing - running in simulation mode."],
@@ -19,10 +21,16 @@ export const analyzeStageWithGemini = async (
     };
   }
 
+  // Create a new instance right before the call
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
   const prompt = `
     You are GreenTrust AI, a supply chain auditor. 
     Analyze the following data input from a ${stageName}.
-    Check for logical inconsistencies (e.g., impossible distances, wrong moisture levels).
+    
+    HIERARCHY VALIDATION:
+    - Check if the productCode matches the category chainID prefix (e.g. Code 101 must be under Category 100).
+    - Detect any logic errors in energy usage or environment scores.
     
     Data: ${JSON.stringify(data)}
 
@@ -52,76 +60,57 @@ export const analyzeStageWithGemini = async (
       }
     });
 
-    const text = response.text;
-    if (!text) throw new Error("No response from AI");
-    
+    const text = response.text || "{}";
     return JSON.parse(text) as TrustAnalysis;
   } catch (error) {
-    console.error("Gemini Analysis Failed:", error);
-    return {
-      trustScore: 50,
-      anomalies: ["AI Service Unavailable"],
-      suggestions: ["Check network connection"],
-      isVerified: false
-    };
+    console.error("Gemini Audit Error:", error);
+    return { trustScore: 50, anomalies: ["Audit Logic Error"], suggestions: ["Retry analysis"], isVerified: false };
   }
 };
 
+/**
+ * Chatbot service to interact with users about EcoChain data and general sustainability guidance.
+ */
 export const askChatbot = async (
-  userMessage: string,
+  message: string,
   history: { role: 'user' | 'model'; text: string }[],
   context: { role: string; category: string }
 ): Promise<string> => {
   if (!process.env.API_KEY) {
-    return "I'm currently in offline mode because the API key is missing. EcoChain is a blockchain-based platform for sustainability tracking across different industries like Thermal Processing, Mixing, and more.";
+    return "EcoAssistant (Simulation): Please configure an API Key to enable my neural response engine. Currently I can only simulate responses.";
   }
 
-  const systemInstruction = `
-    You are EcoAssistant, the official AI guide for EcoChain.
-    EcoChain is a blockchain-based supply chain transparency platform that tracks sustainability, carbon emissions (CO2e), and data integrity.
-    
-    Current User Context:
-    - Role: ${context.role}
-    - Category: ${context.category}
+  // Create a new instance right before the call
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-    Platform Features:
-    1. Blockchain Ledger: Immutable recording of every manufacturing step.
-    2. Carbon Intelligence: Automatic CO2 calculation based on energy, distance, and materials.
-    3. AI Verification (GreenTrust AI): Every block submitted is audited by AI for anomalies.
-    4. Categories: Supports Thermal Processing, Mixing, Fermentation, Extraction, and Assembly.
-    5. Analytics: Real-time visualization of total carbon footprint and trust scores.
-    6. Certification: Generates a tamper-proof Carbon Integrity Certificate with QR code verification.
+  // Map application history to the structure expected by the GenAI SDK
+  const contents = history.map(msg => ({
+    role: msg.role === 'user' ? 'user' : 'model',
+    parts: [{ text: msg.text }]
+  }));
 
-    Guidelines:
-    - Be helpful, professional, and concise.
-    - If it's the user's first login, explain their specific role in the ${context.category} workflow.
-    - Encourage sustainable practices and explain how the trust score works.
-    - If asked about technical details, mention SHA-256 hashing and the immutable nature of the ledger.
-  `;
+  // Append the current user query
+  contents.push({
+    role: 'user',
+    parts: [{ text: message }]
+  });
 
   try {
-    const chatHistory = history.map(h => ({
-      role: h.role === 'model' ? 'model' : 'user',
-      parts: [{ text: h.text }]
-    }));
-
-    const response = await ai.models.generateContent({
+    const response: GenerateContentResponse = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: [
-        ...chatHistory,
-        { role: 'user', parts: [{ text: userMessage }] }
-      ],
+      contents,
       config: {
-        systemInstruction,
-        temperature: 0.7,
-        topP: 0.95,
-        maxOutputTokens: 1000,
-      }
+        systemInstruction: `You are EcoAssistant, an expert AI specialized in industrial supply chain sustainability and blockchain transparency.
+        Current Context:
+        - User Role: ${context.role}
+        - Sector: ${context.category}
+        Provide professional, concise, and technically accurate advice on carbon footprint reduction and data integrity.`,
+      },
     });
 
-    return response.text || "I'm sorry, I couldn't generate a response.";
+    return response.text || "I apologize, but I am unable to formulate a response at this moment.";
   } catch (error) {
-    console.error("Chatbot Error:", error);
-    return "I'm having trouble connecting to my brain right now. Please try again in a moment!";
+    console.error("Gemini Chatbot Error:", error);
+    return "My neural pathways are temporarily saturated. Please re-submit your query in a few moments.";
   }
 };
