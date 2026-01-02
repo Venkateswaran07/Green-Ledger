@@ -1,4 +1,4 @@
-<# EcoChain: Blockchain-Powered Carbon Intelligence Ledger
+# EcoChain: Blockchain-Powered Carbon Intelligence Ledger
 
 EcoChain (commercially known as **Green Ledger**) is a world-class supply chain transparency platform. It combines **Immutable Blockchain Technology**, **AI-Powered Carbon Auditing**, and **Real-time Analytics** to verify environmental claims and calculate the true carbon footprint of industrial batches from raw material to final dispatch.
 
